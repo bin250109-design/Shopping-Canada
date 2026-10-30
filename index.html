@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quick Shopping</title>
+<meta name="description" content="Tính tiền mua sắm tại Québec: GST 5% và QST 9,975%.">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Quick Shopping">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+:root {
+  --bg: #000000;
+  --card: #1c1c1e;
+  --card-raised: #2c2c2e;
+  --separator: rgba(84, 84, 88, 0.55);
+  --text: #ffffff;
+  --muted: #8e8e93;
+  --blue: #0a84ff;
+  --red: #ff453a;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html { background: var(--bg); -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 17px;
+  line-height: 1.3;
+  -webkit-font-smoothing: antialiased;
+  touch-action: manipulation;
+}
+
+.app {
+  max-width: 520px;
+  margin: 0 auto;
+  padding:
+    calc(env(safe-area-inset-top, 0px) + 14px)
+    calc(env(safe-area-inset-right, 0px) + 16px)
+    calc(env(safe-area-inset-bottom, 0px) + 40px)
+    calc(env(safe-area-inset-left, 0px) + 16px);
+}
+
+h1 {
+  margin: 4px 4px 16px;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 0.37px;
+}
+
+.card {
+  background: var(--card);
+  border-radius: 22px;
+}
+
+/* Tổng tiền */
+.total-card { padding: 22px 22px 8px; }
+
+.total-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.total {
+  margin: 4px 0 14px;
+  font-size: clamp(36px, 14vw, 60px);
+  font-weight: 700;
+  letter-spacing: -1px;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.total.long { font-size: clamp(28px, 10vw, 44px); }
+
+.breakdown { margin: 0; }
+.breakdown div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 0.5px solid var(--separator);
+}
+.breakdown dt { color: var(--muted); font-size: 16px; }
+.breakdown dd {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Nhập giá */
+.entry {
+  display: flex;
+  gap: 10px;
+  margin: 14px 0 0;
+}
+
+.field {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  height: 56px;
+  padding: 0 16px;
+  background: var(--card);
+  border-radius: 16px;
+  border: 1.5px solid transparent;
+  transition: border-color 0.15s ease;
+}
+.field:focus-within { border-color: var(--blue); }
+.field.invalid { border-color: var(--red); }
+
+.field .cur {
+  margin-right: 6px;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.field input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 24px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  caret-color: var(--blue);
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 0;
+}
+.field input::placeholder { color: #48484a; }
+
+.btn-add {
+  flex: none;
+  height: 56px;
+  padding: 0 26px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--blue);
+  color: #fff;
+  font-family: var(--font);
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-add:active { opacity: 0.7; transform: scale(0.97); }
+
+.error {
+  margin: 8px 6px 0;
+  color: var(--red);
+  font-size: 14px;
+}
+
+/* Danh sách */
+.list-card { margin-top: 18px; padding: 6px 18px 4px; }
+
+.list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+}
+.list-head h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+.list-head .count {
+  margin-left: 8px;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.btn-clear {
+  padding: 10px 0 10px 12px;
+  border: 0;
+  background: none;
+  color: var(--red);
+  font-family: var(--font);
+  font-size: 17px;
+  cursor: pointer;
+}
+.btn-clear:active { opacity: 0.5; }
+.btn-clear[hidden] { display: none; }
+
+.list { margin: 0; padding: 0; list-style: none; }
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 56px;
+  border-top: 0.5px solid var(--separator);
+}
+
+.row .idx {
+  flex: none;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 7px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: var(--card-raised);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.row .price {
+  flex: 1;
+  min-width: 0;
+  font-size: 21px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.row .del {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  margin-right: -10px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: none;
+  color: var(--red);
+  cursor: pointer;
+}
+.row .del:active { opacity: 0.4; }
+.row .del svg { width: 26px; height: 26px; }
+
+.row.enter { animation: rowIn 0.22s ease-out; }
+@keyframes rowIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+
+.empty {
+  margin: 0;
+  padding: 18px 0 22px;
+  border-top: 0.5px solid var(--separator);
+  color: var(--muted);
+  font-size: 16px;
+}
+.empty[hidden] { display: none; }
+
+button:focus-visible, input:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.field input:focus-visible { outline: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .row.enter { animation: none; }
+  .field { transition: none; }
+}
+</style>
+</head>
+<body>
+<main class="app">
+  <h1>Quick Shopping</h1>
+
+  <section class="card total-card" aria-live="polite">
+    <div class="total-label">Tổng thanh toán (CAD)</div>
+    <div class="total" id="total">$0.00</div>
+    <dl class="breakdown">
+      <div><dt>Tổng trước thuế</dt><dd id="subtotal">$0.00</dd></div>
+      <div><dt>GST (TPS) 5%</dt><dd id="gst">$0.00</dd></div>
+      <div><dt>QST (TVQ) 9,975%</dt><dd id="qst">$0.00</dd></div>
+    </dl>
+  </section>
+
+  <form class="entry" id="form" novalidate autocomplete="off">
+    <label class="field" id="field">
+      <span class="cur" aria-hidden="true">$</span>
+      <input id="price" type="text" inputmode="decimal" enterkeyhint="done"
+             placeholder="0.00" maxlength="12" autocomplete="off"
+             autocorrect="off" autocapitalize="off" spellcheck="false"
+             aria-label="Giá sản phẩm trước thuế">
+    </label>
+    <button class="btn-add" type="submit">Thêm</button>
+  </form>
+  <p class="error" id="error" role="alert" hidden></p>
+
+  <section class="card list-card">
+    <header class="list-head">
+      <h2>Danh sách<span class="count" id="count"></span></h2>
+      <button class="btn-clear" id="clear" type="button" hidden>Xóa tất cả</button>
+    </header>
+    <ul class="list" id="list"></ul>
+    <p class="empty" id="empty">Nhập giá trước thuế rồi nhấn Thêm.</p>
+  </section>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var STORAGE_KEY = 'quick-shopping-current-list';
+  var GST_NUM = 5, GST_DEN = 100;          // 5%
+  var QST_NUM = 9975, QST_DEN = 100000;    // 9,975%
+
+  // Toàn bộ số tiền được lưu bằng số nguyên cent để tránh sai số số thực.
+  var items = load();
+
+  var $ = function (id) { return document.getElementById(id); };
+  var form = $('form'), input = $('price'), field = $('field'), errorEl = $('error');
+  var listEl = $('list'), emptyEl = $('empty'), countEl = $('count'), clearBtn = $('clear');
+  var totalEl = $('total'), subEl = $('subtotal'), gstEl = $('gst'), qstEl = $('qst');
+
+  /* ---------- Tiền tệ ---------- */
+
+  // "12,5" / "12.50" / "$12.5" -> 1250 cent; trả về null nếu không hợp lệ.
+  function parsePrice(raw) {
+    var s = String(raw).replace(/\s+/g, '').replace(/^\$/, '').replace(',', '.');
+    if (!/^(\d{1,7}(\.\d{0,2})?|\.\d{1,2})$/.test(s)) return null;
+    var parts = s.split('.');
+    var whole = parts[0] ? parseInt(parts[0], 10) : 0;
+    var frac = parseInt(((parts[1] || '') + '00').slice(0, 2), 10);
+    return whole * 100 + frac;
+  }
+
+  // Thuế = làm tròn half-up đến 1 cent của (tổng trước thuế x thuế suất).
+  // Tính bằng BigInt (số nguyên) nên không có sai số dấu phẩy động.
+  function taxCents(subtotal, num, den) {
+    var n = BigInt(subtotal) * BigInt(num);
+    var d = BigInt(den);
+    return Number((n + d / 2n) / d);
+  }
+
+  function fmt(cents) {
+    var whole = Math.floor(cents / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return '$' + whole + '.' + String(cents % 100).padStart(2, '0');
+  }
+
+  /* ---------- Lưu danh sách hiện tại (chỉ để không mất khi iOS tải lại app) ---------- */
+
+  function load() {
+    try {
+      var data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      if (Array.isArray(data)) {
+        return data.filter(function (n) { return Number.isSafeInteger(n) && n > 0; });
+      }
+    } catch (e) {}
+    return [];
+  }
+
+  function save() {
+    try {
+      if (items.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      else localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {}
+  }
+
+  /* ---------- Hiển thị ---------- */
+
+  var DELETE_ICON =
+    '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+    '<circle cx="12" cy="12" r="10" fill="currentColor"/>' +
+    '<path d="M8.6 8.6l6.8 6.8M15.4 8.6l-6.8 6.8" stroke="#1c1c1e" stroke-width="2.2" stroke-linecap="round" fill="none"/>' +
+    '</svg>';
+
+  function render(newIndex) {
+    var subtotal = items.reduce(function (a, b) { return a + b; }, 0);
+    var gst = taxCents(subtotal, GST_NUM, GST_DEN);
+    var qst = taxCents(subtotal, QST_NUM, QST_DEN);
+    var total = subtotal + gst + qst;
+
+    var totalText = fmt(total);
+    totalEl.textContent = totalText;
+    totalEl.classList.toggle('long', totalText.length >= 11);
+    subEl.textContent = fmt(subtotal);
+    gstEl.textContent = fmt(gst);
+    qstEl.textContent = fmt(qst);
+
+    countEl.textContent = items.length ? items.length + ' sản phẩm' : '';
+    emptyEl.hidden = items.length > 0;
+    clearBtn.hidden = items.length === 0;
+
+    var frag = document.createDocumentFragment();
+    for (var i = items.length - 1; i >= 0; i--) {   // mới nhất ở trên cùng
+      frag.appendChild(buildRow(i, i === newIndex));
+    }
+    listEl.innerHTML = '';
+    listEl.appendChild(frag);
+  }
+
+  function buildRow(index, isNew) {
+    var li = document.createElement('li');
+    li.className = 'row' + (isNew ? ' enter' : '');
+
+    var idx = document.createElement('span');
+    idx.className = 'idx';
+    idx.textContent = String(index + 1);
+
+    var price = document.createElement('span');
+    price.className = 'price';
+    price.textContent = fmt(items[index]);
+
+    var del = document.createElement('button');
+    del.className = 'del';
+    del.type = 'button';
+    del.setAttribute('aria-label', 'Xóa sản phẩm ' + (index + 1));
+    del.innerHTML = DELETE_ICON;
+    del.addEventListener('click', function () {
+      items.splice(index, 1);
+      save();
+      render();
+    });
+
+    li.appendChild(idx);
+    li.appendChild(price);
+    li.appendChild(del);
+    return li;
+  }
+
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.hidden = false;
+    field.classList.add('invalid');
+  }
+
+  function clearError() {
+    errorEl.hidden = true;
+    field.classList.remove('invalid');
+  }
+
+  /* ---------- Sự kiện ---------- */
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var raw = input.value.trim();
+    if (!raw) { showError('Nhập giá sản phẩm trước thuế.'); return; }
+
+    var cents = parsePrice(raw);
+    if (cents === null) {
+      showError('Giá không hợp lệ. Dùng số, tối đa 2 chữ số thập phân (ví dụ 12.99).');
+      return;
+    }
+    if (cents <= 0) { showError('Giá phải lớn hơn $0.00.'); return; }
+
+    clearError();
+    items.push(cents);
+    save();
+    input.value = '';
+    render(items.length - 1);
+    input.focus();
+  });
+
+  input.addEventListener('input', clearError);
+
+  clearBtn.addEventListener('click', function () {
+    if (!items.length) return;
+    if (!window.confirm('Xóa tất cả ' + items.length + ' sản phẩm?')) return;
+    items = [];
+    save();
+    clearError();
+    render();
+    input.focus();
+  });
+
+  render();
+
+  /* ---------- Service worker (ngoại tuyến) ---------- */
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    });
+  }
+})();
+</script>
+</body>
+</html>
